@@ -31,4 +31,5 @@ The task is episodic, and in order to solve the environment, your agent must get
 ### Instructions
 
 Run the code in `Navigation.ipynb`
+
 Additional information can be found in `Report.ipynb`
