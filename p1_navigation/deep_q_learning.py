@@ -48,8 +48,8 @@ def dqn(env, agent, n_episodes=10000, average_score_solved=13.0, epsilon_start=1
         if i_episode % 100 == 0:
             print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, np.mean(scores_window)))
         if np.mean(scores_window)>=average_score_solved:
-            print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(i_episode, np.mean(scores_window)))
-            num_episodes_solved = i_episode
+            num_episodes_solved = i_episode - 100
+            print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(num_episodes_solved, np.mean(scores_window)))
             torch.save(agent.qnetwork_local.state_dict(), 'checkpoint.pth')
             break
     return scores, num_episodes_solved
