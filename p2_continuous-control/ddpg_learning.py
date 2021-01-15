@@ -34,7 +34,7 @@ def ddpg(env, agent, num_agents, average_score_solved=30.0, n_episodes=1000):
         mean_scores_deque = np.mean(scores_deque)
 
         print('\rEpisode {}\tAverage Score: {:.2f}\tScore: {:.2f}'.format(i_episode, mean_scores_deque, mean_scores), end="")
-        if i_episode % 100 == 0:
+        if i_episode % 50 == 0:
             torch.save(agent.actor_local.state_dict(), 'checkpoint_actor.pth')
             torch.save(agent.critic_local.state_dict(), 'checkpoint_critic.pth')
             print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, mean_scores_deque))
