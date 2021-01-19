@@ -12,8 +12,11 @@ class ReplayBuffer:
         """Initialize a ReplayBuffer object.
         Params
         ======
+            action_size (int): dimension of each action
             buffer_size (int): maximum size of buffer
             batch_size (int): size of each training batch
+            device (torch.Device): pytorch device
+            seed (int): random seed
         """
         self.action_size = action_size
         self.memory = deque(maxlen=buffer_size)  # internal memory (deque)
