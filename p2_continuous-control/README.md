@@ -37,4 +37,5 @@ The environment is considered solved, when the average (over 100 episodes) of th
 ### Instructions
 
 Run the code in `Continuous_Control.ipynb`
+
 Additional information can be found in `Report.ipynb`
