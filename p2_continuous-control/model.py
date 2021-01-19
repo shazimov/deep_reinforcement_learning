@@ -30,6 +30,9 @@ class Actor(nn.Module):
         self.fc2 = nn.Linear(fc1_units, fc2_units)
         self.bn2 = nn.BatchNorm1d(fc2_units)
         self.fc3 = nn.Linear(fc2_units, action_size)
+
+        nn.Dropout(p=0.2)
+
         self.reset_parameters()
 
     def reset_parameters(self):
@@ -56,6 +59,7 @@ class Critic(nn.Module):
             seed (int): Random seed
             fcs1_units (int): Number of nodes in the first hidden layer
             fc2_units (int): Number of nodes in the second hidden layer
+            fc3_units (int): Number of nodes in the third hidden layer
         """
         super(Critic, self).__init__()
         self.seed = torch.manual_seed(seed)
