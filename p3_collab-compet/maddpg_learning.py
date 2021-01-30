@@ -16,6 +16,11 @@ def maddpg(env, agent, num_agents, average_score_solved=0.5, n_episodes=10000):
         n_episodes (int): maximum number of training episodes
     """
 
+    # amplitude of OU noise
+    # this slowly decreases to 0
+    noise_reduction = 2
+    noise_delta = 0.9999
+
     total_timesteps = 0
 
     num_episodes_solved = 0
@@ -33,7 +38,8 @@ def maddpg(env, agent, num_agents, average_score_solved=0.5, n_episodes=10000):
 
         while True:
             timesteps+=1
-            actions = agent.act(states)
+            actions = agent.act(states, noise_reduction)
+            noise_reduction *= noise_delta
             env_info = env.step(actions)[brain_name]
             next_states = env_info.vector_observations  # get the next state
             rewards = env_info.rewards  # get the reward
@@ -51,10 +57,11 @@ def maddpg(env, agent, num_agents, average_score_solved=0.5, n_episodes=10000):
 
         total_timesteps += timesteps
 
-        print('\rEpisode {}\tAverage Score: {:.4f}\tMax Score: {:.4f}'.format(i_episode, mean_scores_deque, max_score), end="")
+        print('\rEpisode {}\tAverage Score: {:.4f}\tMax Score: {:.2f}'.format(i_episode, mean_scores_deque, max_score), end="")
         if i_episode % 100 == 0:
             print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, mean_scores_deque))
             print("total timesteps: " + str(total_timesteps))
+            print("noise_reduction: " + str(noise_reduction))
 
         #print("\ttimesteps: " + str(timesteps) + "/" +str(total_timesteps))
         #print("\tscores: " + str(scores))

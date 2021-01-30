@@ -12,7 +12,7 @@ def hidden_init(layer):
 class Actor(nn.Module):
     """Actor (Policy) Model."""
 
-    def __init__(self, state_size, action_size, seed, fc1_units=256, fc2_units=256):
+    def __init__(self, state_size, action_size, seed, fc1_units=64, fc2_units=32):
         """Initialize parameters and build model.
         Params
         ======
@@ -44,22 +44,21 @@ class Actor(nn.Module):
 class Critic(nn.Module):
     """Critic (Value) Model."""
 
-    def __init__(self, num_agents, state_size, action_size, seed, fcs1_units=256, fc2_units=256):
+    def __init__(self, num_agents, state_size, action_size, seed, fc1_units=64, fc2_units=32):
         """Initialize parameters and build model.
         Params
         ======
             state_size (int): Dimension of each state
             action_size (int): Dimension of each action
             seed (int): Random seed
-            fcs1_units (int): Number of nodes in the first hidden layer
+            fc1_units (int): Number of nodes in the first hidden layer
             fc2_units (int): Number of nodes in the second hidden layer
-            fc3_units (int): Number of nodes in the third hidden layer
         """
         super(Critic, self).__init__()
         self.seed = torch.manual_seed(seed)
-        self.bn1 = nn.BatchNorm1d(fcs1_units)
-        self.fc1 = nn.Linear((state_size + action_size) * num_agents, fcs1_units)
-        self.fc2 = nn.Linear(fcs1_units, fc2_units)
+        self.bn1 = nn.BatchNorm1d(fc1_units)
+        self.fc1 = nn.Linear((state_size + action_size) * num_agents, fc1_units)
+        self.fc2 = nn.Linear(fc1_units, fc2_units)
         self.fc3 = nn.Linear(fc2_units, 1)
         self.reset_parameters()
 

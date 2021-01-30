@@ -12,7 +12,7 @@ from noise import OUNoise
 UPDATES_PER_TIME_STEP = 1
 
 class MultiAgent():
-    def __init__(self, state_size, action_size, num_agents, buffer_size, batch_size, gamma, tau, learning_rate_actor, learning_rate_critic, device, update_every=1, random_seed=42):
+    def __init__(self, state_size, action_size, num_agents, buffer_size, batch_size, gamma, tau, learning_rate_actor, learning_rate_critic, weight_decay, device, update_every=1, random_seed=42):
         """Initialize an Agent object.
 
         Params
@@ -39,6 +39,7 @@ class MultiAgent():
                 tau=tau,
                 learning_rate_actor=learning_rate_actor,
                 learning_rate_critic=learning_rate_critic,
+                weight_decay=weight_decay,
                 device=device,
                 random_seed=random_seed))
 
@@ -56,16 +57,16 @@ class MultiAgent():
         self.t_step = (self.t_step + 1) % self.update_every
         if self.t_step == 0:
             if len(self.memory) > self.batch_size:
-                for z in range(UPDATES_PER_TIME_STEP):
-                    experiences = self.memory.sample()
-                    for i,agent in enumerate(self.agents):
-                        states, actions, rewards, next_states, dones = experiences
-                        agent.learn(i, experiences, self.gamma)
+                #for z in range(UPDATES_PER_TIME_STEP):
+                experiences = self.memory.sample()
+                for i,agent in enumerate(self.agents):
+                    states, actions, rewards, next_states, dones = experiences
+                    agent.learn(i, experiences, self.gamma)
 
-    def act(self, states, add_noise=True):
+    def act(self, states, noise_reduction, add_noise=True):
         actions = np.zeros([self.num_agents, self.action_size])
         for i,agent in enumerate(self.agents):
-            actions[i,:] = agent.act(states[i], add_noise = add_noise)
+            actions[i,:] = agent.act(states[i], noise_reduction, add_noise = add_noise)
         return actions
 
     def reset(self):
@@ -84,7 +85,7 @@ class MultiAgent():
 class Agent():
     """Interacts with and learns from the environment."""
 
-    def __init__(self, num_agents, state_size, action_size, gamma, tau, learning_rate_actor, learning_rate_critic, device, random_seed=42):
+    def __init__(self, num_agents, state_size, action_size, gamma, tau, learning_rate_actor, learning_rate_critic, weight_decay, device, random_seed=42):
         """Initialize an Agent object.
 
         Params
@@ -111,14 +112,14 @@ class Agent():
         # Critic Network (w/ Target Network)
         self.critic_local = Critic(num_agents, state_size, action_size, random_seed).to(device)
         self.critic_target = Critic(num_agents, state_size, action_size, random_seed).to(device)
-        self.critic_optimizer = optim.Adam(self.critic_local.parameters(), lr=learning_rate_critic, weight_decay=0)#0.0001
+        self.critic_optimizer = optim.Adam(self.critic_local.parameters(), lr=learning_rate_critic, weight_decay=weight_decay)#0.0001
 
         # Noise process
         self.noise = OUNoise(size=action_size, seed=random_seed)
 
         self.timestep = 0
 
-    def act(self, state, add_noise=True):
+    def act(self, state, noise_reduction, add_noise=True):
         """Returns actions for given state as per current policy."""
         state = torch.from_numpy(state).float().to(self.device)
         self.actor_local.eval()
@@ -126,7 +127,7 @@ class Agent():
             action = self.actor_local(state).cpu().data.numpy()
         self.actor_local.train()
         if add_noise:
-            action += self.noise.sample()
+            action += self.noise.sample() * noise_reduction
         return np.clip(action, -1, 1)
 
     def reset(self):
@@ -162,10 +163,15 @@ class Agent():
         Q_targets = rewards[index] + (gamma * Q_targets_next * (1 - dones[index]))
         # Compute critic loss
         Q_expected = self.critic_local(all_states, all_actions)
-        critic_loss = F.mse_loss(Q_expected, Q_targets)
+
+        huber_loss = torch.nn.SmoothL1Loss()
+        critic_loss = huber_loss(Q_expected, Q_targets.detach())
+
+        #critic_loss = F.mse_loss(Q_expected, Q_targets)
         # Minimize the loss
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.critic_local.parameters(), 1)
         self.critic_optimizer.step()
 
         # ---------------------------- update actor ---------------------------- #
