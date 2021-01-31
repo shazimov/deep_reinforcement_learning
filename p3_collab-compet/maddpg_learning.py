@@ -59,11 +59,11 @@ def maddpg(env, agent, num_agents, average_score_solved=0.5, n_episodes=10000, e
 
         total_timesteps += timesteps
 
-        print('\rEpisode {}\tAverage Score: {:.4f}\tScores: [ {:.2f} | {:.2f} ]'.format(i_episode, mean_scores_deque, scores[0], scores[1]), end="")
+        print('\rEpisode {}\tAverage Score: {:.4f}\tCurrent Max Score: {:.2f}'.format(i_episode, mean_scores_deque, max_score), end="")
         if i_episode % 100 == 0:
-            print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, mean_scores_deque))
-            print("total timesteps: " + str(total_timesteps))
-            print("epsilon: " + str(epsilon))
+            print('\rEpisode {}\tAverage Score: {:.4f}'.format(i_episode, mean_scores_deque))
+            #print("total timesteps: " + str(total_timesteps))
+            #print("epsilon: " + str(epsilon))
 
         if mean_scores_deque >= average_score_solved:
             elapsed_time = time.perf_counter() - start_time
