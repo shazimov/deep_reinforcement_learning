@@ -63,10 +63,10 @@ class MultiAgent():
                     states, actions, rewards, next_states, dones = experiences
                     agent.learn(i, experiences, self.gamma)
 
-    def act(self, states, noise_reduction, add_noise=True):
+    def act(self, states, epsilon, add_noise=True):
         actions = np.zeros([self.num_agents, self.action_size])
         for i,agent in enumerate(self.agents):
-            actions[i,:] = agent.act(states[i], noise_reduction, add_noise = add_noise)
+            actions[i,:] = agent.act(states[i], epsilon, add_noise = add_noise)
         return actions
 
     def reset(self):
@@ -107,7 +107,7 @@ class Agent():
         # Actor Network (w/ Target Network)
         self.actor_local = Actor(state_size, action_size, random_seed).to(device)
         self.actor_target = Actor(state_size, action_size, random_seed).to(device)
-        self.actor_optimizer = optim.Adam(self.actor_local.parameters(), lr=learning_rate_actor)
+        self.actor_optimizer = optim.Adam(self.actor_local.parameters(), lr=learning_rate_actor, weight_decay=weight_decay)
 
         # Critic Network (w/ Target Network)
         self.critic_local = Critic(num_agents, state_size, action_size, random_seed).to(device)
@@ -119,7 +119,7 @@ class Agent():
 
         self.timestep = 0
 
-    def act(self, state, noise_reduction, add_noise=True):
+    def act(self, state, epsilon, add_noise=True):
         """Returns actions for given state as per current policy."""
         state = torch.from_numpy(state).float().to(self.device)
         self.actor_local.eval()
@@ -127,7 +127,7 @@ class Agent():
             action = self.actor_local(state).cpu().data.numpy()
         self.actor_local.train()
         if add_noise:
-            action += self.noise.sample() * noise_reduction
+            action += self.noise.sample() * epsilon
         return np.clip(action, -1, 1)
 
     def reset(self):
