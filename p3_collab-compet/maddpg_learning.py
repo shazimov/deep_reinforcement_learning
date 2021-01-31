@@ -5,8 +5,8 @@ import numpy as np
 from collections import deque
 
 def maddpg(env, agent, num_agents, average_score_solved=0.5, n_episodes=10000, epsilon=1.0, epsilon_decay=1.0):
-    """Deep Deterministic Policy Gradient Algorithm. Exits once the environment is considered solved.
-    Returns the scores per episode and total number of episodes to solve the environment.
+    """Multi Agent Deep Deterministic Policy Gradient Algorithm. Exits once the environment is considered solved.
+    Returns the scores per episode, rolling average of the scores and total number of episodes to solve the environment.
 
     Params
     ======
@@ -15,6 +15,8 @@ def maddpg(env, agent, num_agents, average_score_solved=0.5, n_episodes=10000, e
         num_agents (int): number of agents in the environment
         average_score_solved (float): average score needed (over last 100 episodes) to consider the environment solved
         n_episodes (int): maximum number of training episodes
+        epsilon (float): for scaling the noise added to the actions (exploration)
+        epsilon_decay (float): for decaying the noise during training
     """
     total_timesteps = 0
 

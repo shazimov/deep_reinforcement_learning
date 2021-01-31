@@ -19,7 +19,6 @@ class OUNoise:
         self.state = copy.copy(self.mu)
 
     def sample(self):
-        #scale = 0.5
         """Update internal state and return it as a noise sample."""
         x = self.state
         dx = self.theta * (self.mu - x) + self.sigma * np.random.standard_normal(self.size)

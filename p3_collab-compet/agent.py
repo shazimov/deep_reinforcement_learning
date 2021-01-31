@@ -13,16 +13,23 @@ UPDATES_PER_TIME_STEP = 1
 
 class MultiAgent():
     def __init__(self, state_size, action_size, num_agents, buffer_size, batch_size, gamma, tau, learning_rate_actor, learning_rate_critic, weight_decay, device, update_every=1, random_seed=42):
-        """Initialize an Agent object.
+        """Initialize an Multi Agent object (MADDPG).
 
         Params
         ======
             state_size (int): dimension of each state
             action_size (int): dimension of each action
             num_agents (list): number of agents acting in the environment
-
+            buffer_size (int): size of the replay buffer
             batch_size (int): minibatch size
+            gamma (float): discount factor
+            tau (float): used for soft update of target parameters
+            learning_rate_actor (float): learning rate for the actor
+            learning_rate_critic (float): learning rate for the critic
+            weight_decay (float): weight decay for the optimizers
+            device (torch.Device): pytorch device
             update_every (int): how many time steps between network updates
+            random_seed (int): random seed
         """
         self.action_size = action_size
         self.num_agents = num_agents
@@ -44,13 +51,13 @@ class MultiAgent():
                 random_seed=random_seed))
 
         self.update_every = update_every
+
         # Initialize time step (for updating every self.update_every steps)
         self.t_step = 0
 
     def step(self, states, actions, rewards, next_states, dones):
         """Save experience in replay memory, and use random sample from buffer to learn."""
         # Save experience / reward
-        #for state, action, reward, next_state, done in zip(states, actions, rewards, next_states, dones):
         self.memory.add(states, actions, rewards, next_states, dones)
 
         # Learn, if enough samples are available in memory
@@ -63,42 +70,50 @@ class MultiAgent():
                     states, actions, rewards, next_states, dones = experiences
                     agent.learn(i, experiences, self.gamma)
 
-    def act(self, states, epsilon, add_noise=True):
+    def act(self, states, epsilon=0, add_noise=True):
+        """Returns actions for given state as per current policy."""
         actions = np.zeros([self.num_agents, self.action_size])
         for i,agent in enumerate(self.agents):
             actions[i,:] = agent.act(states[i], epsilon, add_noise = add_noise)
         return actions
 
     def reset(self):
+        """Resets the noise"""
         for agent in self.agents:
             agent.reset()
 
     def save_checkpoints(self):
+        """Save the actor and critic parameters as checkpoints"""
         for i,agent in enumerate(self.agents):
             torch.save(agent.actor_local.state_dict(), 'agent' + str(i) + 'checkpoint_actor.pth')
             torch.save(agent.critic_local.state_dict(), 'agent' + str(i) + 'checkpoint_critic.pth')
 
-    def load_checkpoints(self):
-        pass
+    def load_actor_checkpoints(self):
+        """Load the checkpoints for the actor parameters"""
+        for i,agent in enumerate(self.agents):
+            agent.actor_local.load_state_dict(torch.load('agent' + str(i) + 'checkpoint_actor.pth'))
 
 
 class Agent():
     """Interacts with and learns from the environment."""
 
     def __init__(self, num_agents, state_size, action_size, gamma, tau, learning_rate_actor, learning_rate_critic, weight_decay, device, random_seed=42):
-        """Initialize an Agent object.
+        """Initialize an Agent object (used my MultiAgent for MADDPG).
 
         Params
         ======
+            num_agents (list): number of agents acting in the environment
             state_size (int): dimension of each state
             action_size (int): dimension of each action
             gamma (float): discount factor
             tau (float): used for soft update of target parameters
             learning_rate_actor (float): learning rate for the actor
             learning_rate_critic (float): learning rate for the critic
+            weight_decay (float): weight decay for the optimizers
             device (torch.Device): pytorch device
-            seed (int): random seed
+            random_seed (int): random seed
         """
+
         self.gamma = gamma
         self.tau = tau
         self.device = device
@@ -119,7 +134,7 @@ class Agent():
 
         self.timestep = 0
 
-    def act(self, state, epsilon, add_noise=True):
+    def act(self, state, epsilon=1, add_noise=True):
         """Returns actions for given state as per current policy."""
         state = torch.from_numpy(state).float().to(self.device)
         self.actor_local.eval()
@@ -131,6 +146,7 @@ class Agent():
         return np.clip(action, -1, 1)
 
     def reset(self):
+        """Resets the noise"""
         self.noise.reset()
 
     def learn(self, index, experiences, gamma):
@@ -166,8 +182,8 @@ class Agent():
 
         huber_loss = torch.nn.SmoothL1Loss()
         critic_loss = huber_loss(Q_expected, Q_targets.detach())
-
         #critic_loss = F.mse_loss(Q_expected, Q_targets)
+
         # Minimize the loss
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
