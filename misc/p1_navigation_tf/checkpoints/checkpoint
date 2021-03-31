@@ -1,0 +1,2 @@
+model_checkpoint_path: "qnetwork_local.ckpt"
+all_model_checkpoint_paths: "qnetwork_local.ckpt"
