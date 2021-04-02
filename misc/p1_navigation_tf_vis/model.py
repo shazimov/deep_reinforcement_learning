@@ -14,17 +14,17 @@ class QNetwork(tf.keras.Model):
         self.fc2 = Dense(action_size)
 
     def call(self, state):
-        def scale_lumininance(img):
-            return np.dot(img[..., :3], [0.299, 0.587, 0.114])
+        # def scale_lumininance(img):
+        #     return np.dot(img[..., :3], [0.299, 0.587, 0.114])
+        #
+        # def normalize(img):
+        #     return img / 255
+        #
+        # x = scale_lumininance(state)
+        # x = normalize(x)
+        # x = tf.expand_dims(x, axis=-1)
 
-        def normalize(img):
-            return img / 255
-
-        x = scale_lumininance(state)
-        x = normalize(x)
-        x = tf.expand_dims(x, axis=-1)
-
-        x = self.c1(x)
+        x = self.c1(state)
         #x = self.bn(x)
         x = self.c2(x)
         #x = self.bn(x)

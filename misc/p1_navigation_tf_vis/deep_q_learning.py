@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 from collections import deque
 
@@ -17,6 +18,7 @@ def dqn(env, agent, n_episodes=10000, average_score_solved=13.0, epsilon_start=1
         epsilon_decay (float): multiplicative factor (per episode) for decreasing epsilon
         epsilon_decay_delay (int): used to delay the decay of epsilon by a given number of episodes
     """
+    frames_per_state = 4
 
     num_episodes_solved = 0
     brain_name = env.brain_names[0]
@@ -25,14 +27,27 @@ def dqn(env, agent, n_episodes=10000, average_score_solved=13.0, epsilon_start=1
     epsilon = epsilon_start                    # initialize epsilon
     for i_episode in range(1, n_episodes+1):
         env_info = env.reset(train_mode=True)[brain_name]  # reset the environment
-        state = env_info.visual_observations[0]            # get the current state
+        action = random.choice(np.arange(4))
+
+        state_buffer = deque(maxlen=frames_per_state)
+        next_state_buffer = deque(maxlen=frames_per_state)
+        for i in range(frames_per_state):
+            env_info = env.step(action)[brain_name]
+            cur_state = env_info.visual_observations[0]  # get the current state
+            state_buffer.append(cur_state)
+            next_state_buffer.append(cur_state)
+
+        state = process_frames(state_buffer)
 
         score = 0
         while True:
             action = agent.act(state, epsilon)
-            #for
+
             env_info = env.step(action)[brain_name]
-            next_state = env_info.visual_observations[0]   # get the next state
+            cur_state = env_info.visual_observations[0]   # get the next state
+
+            next_state_buffer.append(cur_state)
+            next_state = process_frames(next_state_buffer)
 
             reward = env_info.rewards[0]                   # get the reward
             done = env_info.local_done[0]                  # see if episode has finished
@@ -54,3 +69,23 @@ def dqn(env, agent, n_episodes=10000, average_score_solved=13.0, epsilon_start=1
             agent.qnetwork_local.save_weights('./checkpoints/qnetwork_local.ckpt')
             break
     return scores, num_episodes_solved
+
+
+def scale_lumininance(img):
+    return np.dot(img[..., :3], [0.299, 0.587, 0.114])
+
+def normalize(img):
+    return img / 255
+
+def process_frames(frames):
+    #x = scale_lumininance(frames)
+    #x = normalize(x)
+    #x = tf.expand_dims(x, axis=-1)
+    f = frames.copy()
+
+    for i in range(len(f)):
+        f[i] = scale_lumininance(f[i])
+        f[i] = normalize(f[i])
+
+    out = np.stack(f, axis=-1)
+    return out
