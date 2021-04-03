@@ -18,6 +18,9 @@ def dqn(env, agent, n_episodes=10000, average_score_solved=13.0, epsilon_start=1
         epsilon_decay (float): multiplicative factor (per episode) for decreasing epsilon
         epsilon_decay_delay (int): used to delay the decay of epsilon by a given number of episodes
     """
+    step_count = 0
+
+    update_target_every = 5000
     frames_per_state = 4
 
     num_episodes_solved = 0
@@ -41,6 +44,7 @@ def dqn(env, agent, n_episodes=10000, average_score_solved=13.0, epsilon_start=1
 
         score = 0
         while True:
+            step_count += 1
             action = agent.act(state, epsilon)
 
             env_info = env.step(action)[brain_name]
@@ -52,6 +56,10 @@ def dqn(env, agent, n_episodes=10000, average_score_solved=13.0, epsilon_start=1
             reward = env_info.rewards[0]                   # get the reward
             done = env_info.local_done[0]                  # see if episode has finished
             agent.step(state, action, reward, next_state, done)
+
+            if step_count % update_target_every == 0:
+                agent.hard_update()
+
             state = next_state
             score += reward
             if done:
