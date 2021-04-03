@@ -115,9 +115,12 @@ class Agent():
         self.optimizer.apply_gradients(zip(gradients, self.qnetwork_local.trainable_weights))
 
         # ------------------- update target network ------------------- #
-        self.soft_update(self.qnetwork_local, self.qnetwork_target)
+        #self.soft_update()
 
-    def soft_update(self, local_model, target_model):
+    def hard_update(self):
+        self.qnetwork_target.set_weights(self.qnetwork_local.get_weights())
+
+    def soft_update(self):
         """Soft update model parameters.
 
         Params
@@ -125,12 +128,9 @@ class Agent():
             local_model (PyTorch model): weights will be copied from
             target_model (PyTorch model): weights will be copied to
         """
+        for target_layer, local_layer in zip(self.qnetwork_target.layers, self.qnetwork_local.layers):
+            if target_layer.trainable:
+                for i in range(len(target_layer.trainable_weights)):
+                    target_layer.trainable_weights[i] = self.tau * local_layer.trainable_weights[i] + (1.0 - self.tau) * target_layer.trainable_weights[i]
+
         #target_model.layers
-        #for i in range(len(target_model.trainable_weights)):
-        #    target_model.trainable_weights[i] = self.tau * local_model.trainable_weights[i] + (1.0 - self.tau) * target_model.trainable_weights[i]
-
-        list_of_weights = []
-        for i in range(len(target_model.trainable_weights)):
-            list_of_weights.append(self.tau * local_model.trainable_weights[i] + (1.0 - self.tau) * target_model.trainable_weights[i])
-
-        target_model.set_weights(list_of_weights)
