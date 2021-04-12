@@ -4,6 +4,8 @@ import numpy as np
 
 from collections import namedtuple, deque
 
+from collections import Mapping, Container
+from sys import getsizeof
 
 class ReplayBuffer:
     """Fixed-size buffer to store experience tuples."""
@@ -29,9 +31,10 @@ class ReplayBuffer:
         """Add a new experience to memory."""
         e = self.experience(state, action, reward, next_state, done)
         self.memory.append(e)
+        del e
 
     def sample(self):
-        """Randomly sample a batch of experiences from memory."""
+        """Randomly sample a batch of experiences from memory."""        
         experiences = random.sample(self.memory, k=self.batch_size)
 
         states = torch.from_numpy(np.vstack([e.state for e in experiences if e is not None])).float().to(self.device)
