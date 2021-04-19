@@ -25,13 +25,13 @@ num_agents = 1
 
 #Initialize the Agent with given hyperparameters
 
-BUFFER_SIZE = int(1e5)  # replay buffer size
-BATCH_SIZE = 64       # batch size
+BUFFER_SIZE = int(3e4)  # replay buffer size
+BATCH_SIZE = 128       # batch size
 GAMMA = 0.99            # discount factor
 TAU = 1e-2              # for soft update of target parameters
 LR_ACTOR = 5e-4         # learning rate of the actor
 LR_CRITIC = 5e-3        # learning rate of the critic
-UPDATE_EVERY = 20        # how often to update the network
+UPDATE_EVERY = 1        # how often to update the network
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") #Torch device to use
 
